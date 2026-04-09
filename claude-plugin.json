@@ -1,0 +1,91 @@
+{
+  "name": "sycophancy-correction",
+  "display_name": "Sycophancy Correction",
+  "version": "1.0.0",
+  "description": "Detects and corrects sycophantic patterns in LLM completions, prompts, agent descriptors, and pipeline configurations. Eight canonical heuristics, PMPO-loop execution, hook-based extensibility, Cedar governance.",
+  "author": {
+    "name": "Prometheus AGS",
+    "url": "https://prometheus-ags.ai",
+    "email": "info@prometheus-ags.ai"
+  },
+  "homepage": "https://agentskills.io/skills/sycophancy-correction",
+  "repository": "https://github.com/prometheus-ags/sycophancy-correction",
+  "license": "MIT",
+  "category": "ai-quality",
+  "tags": [
+    "sycophancy",
+    "evaluation",
+    "correction",
+    "llm-quality",
+    "agents",
+    "pmpo",
+    "adversarial-review",
+    "prompt-engineering"
+  ],
+  "runtime": {
+    "type": "mcp",
+    "transport": "stdio",
+    "binary": "sycophancy-correction",
+    "build": {
+      "command": "cargo build --release",
+      "artifact": "target/release/sycophancy-correction"
+    },
+    "min_node_version": null,
+    "min_rust_edition": "2021"
+  },
+  "tools": [
+    {
+      "name": "detect_sycophancy",
+      "description": "Score and classify sycophancy patterns in any LLM artifact",
+      "read_only": true
+    },
+    {
+      "name": "correct_sycophancy",
+      "description": "Detect and rewrite sycophantic content",
+      "read_only": false
+    },
+    {
+      "name": "analyze_reflect_phase",
+      "description": "Specialized analysis and correction of PMPO Reflect phase outputs",
+      "read_only": false
+    },
+    {
+      "name": "skill_info",
+      "description": "Returns skill metadata and supported patterns",
+      "read_only": true
+    }
+  ],
+  "environment": {
+    "required": ["ANTHROPIC_API_KEY"],
+    "optional": [
+      { "name": "RUST_LOG", "default": "info", "description": "Log verbosity" },
+      { "name": "SKILL_CONFIG", "description": "Path to skill.toml (default: ./skill.toml)" }
+    ]
+  },
+  "permissions": {
+    "network": ["api.anthropic.com"],
+    "filesystem": "none",
+    "system_commands": "none"
+  },
+  "claude_code": {
+    "min_version": "1.0.0",
+    "compatible_clients": ["claude-code", "claude-desktop", "claude-api"],
+    "suggested_slash_commands": [
+      {
+        "command": "/detect-sycophancy",
+        "description": "Analyze the selected text for sycophancy patterns",
+        "tool": "detect_sycophancy"
+      },
+      {
+        "command": "/correct-sycophancy",
+        "description": "Rewrite the selected text to remove sycophancy",
+        "tool": "correct_sycophancy"
+      },
+      {
+        "command": "/check-reflect",
+        "description": "Validate a PMPO Reflect phase output",
+        "tool": "analyze_reflect_phase"
+      }
+    ]
+  }
+}

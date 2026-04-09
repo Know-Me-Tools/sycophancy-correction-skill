@@ -1,0 +1,28 @@
+[package]
+name        = "sycophancy-mcp"
+description = "MCP server binary — exposes sycophancy.correction as Claude Code plugin tools"
+workspace   = "./../.."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[[bin]]
+name = "sycophancy-correction"
+path = "src/main.rs"
+
+[dependencies]
+sycophancy-core = { path = "../sycophancy-core" }
+tokio           = { workspace = true }
+rmcp            = { workspace = true }
+serde           = { workspace = true }
+serde_json      = { workspace = true }
+async-trait     = { workspace = true }
+anyhow          = { workspace = true }
+thiserror       = { workspace = true }
+tracing         = { workspace = true }
+tracing-subscriber = { workspace = true }

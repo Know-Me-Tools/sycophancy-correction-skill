@@ -1,0 +1,22 @@
+# Rust build output
+/target/
+
+# Operating system files
+.DS_Store
+
+# Editor and swap files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp

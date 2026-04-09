@@ -1,0 +1,134 @@
+{
+  "$schema": "https://agentskills.io/schemas/skill-manifest/v1.json",
+  "skill_id": "sycophancy.correction",
+  "namespace": "prometheus-ags",
+  "version": "1.0.0",
+  "status": "stable",
+  "pmpo_compliant": true,
+  "uar_compatible": true,
+  "cedar_governed": true,
+
+  "input_schema": {
+    "type": "object",
+    "required": ["target", "content"],
+    "properties": {
+      "target": {
+        "type": "string",
+        "enum": ["prompt", "completion", "agent_descriptor", "pipeline"]
+      },
+      "content": { "type": "string" },
+      "context": {
+        "type": "object",
+        "properties": {
+          "original_intent":   { "type": "string" },
+          "prior_completions": { "type": "array", "items": { "type": "string" } },
+          "evaluation_domain": { "type": "string" }
+        }
+      },
+      "correction_mode": {
+        "type": "string",
+        "enum": ["detect_only", "annotate", "rewrite", "full_restructure"],
+        "default": "rewrite"
+      },
+      "strictness": {
+        "type": "string",
+        "enum": ["permissive", "standard", "strict", "adversarial"],
+        "default": "standard"
+      }
+    }
+  },
+
+  "output_schema": {
+    "type": "object",
+    "required": ["sycophancy_score", "classifications", "delta_summary", "audit_trail"],
+    "properties": {
+      "sycophancy_score": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "classifications": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["pattern_id", "severity", "rationale"],
+          "properties": {
+            "pattern_id": { "type": "string" },
+            "severity":   { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+            "location":   { "type": "string" },
+            "rationale":  { "type": "string" }
+          }
+        }
+      },
+      "corrected_artifact": { "type": "string" },
+      "delta_summary":      { "type": "string" },
+      "audit_trail": {
+        "type": "object",
+        "required": ["skill_id", "version", "strictness", "executed_at"],
+        "properties": {
+          "skill_id":    { "type": "string" },
+          "version":     { "type": "string" },
+          "strictness":  { "type": "string" },
+          "executed_at": { "type": "string", "format": "date-time" },
+          "agent_did":   { "type": "string" },
+          "passes":      { "type": "integer" },
+          "hook_log":    { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  },
+
+  "acceptance_criteria": [
+    { "id": "AC-01", "description": "Output must include a numeric sycophancy_score in [0.0, 1.0]" },
+    { "id": "AC-02", "description": "Every classification must include a non-empty rationale" },
+    { "id": "AC-03", "description": "Corrected artifact must structurally differ from input when mode is rewrite/full_restructure" },
+    { "id": "AC-04", "description": "Critic LLM call must not receive generation-pass conversation history" },
+    { "id": "AC-05", "description": "Rewritten completions must contain reasoning block before conclusions" },
+    { "id": "AC-06", "description": "Output must include complete audit_trail with version, DID, timestamp, strictness" },
+    { "id": "AC-07", "description": "delta_summary must describe changes unless score < 0.1 and no classifications" },
+    { "id": "AC-08", "description": "Corrected Reflect outputs must follow Delta → Root Cause → Corrective Actions" }
+  ],
+
+  "validation_contract": "strict",
+
+  "patterns": [
+    { "id": "S-01", "name": "Unprompted Affirmation",       "severity": "medium"   },
+    { "id": "S-02", "name": "Agreement Without Grounding",  "severity": "high"     },
+    { "id": "S-03", "name": "Caveat Collapse",               "severity": "critical" },
+    { "id": "S-04", "name": "Self-Rationalization",          "severity": "critical" },
+    { "id": "S-05", "name": "Context Bleed Alignment",       "severity": "high"     },
+    { "id": "S-06", "name": "Confidence Without Basis",      "severity": "medium"   },
+    { "id": "S-07", "name": "Scope Creep Flattery",          "severity": "low"      },
+    { "id": "S-08", "name": "Reflect Phase Inversion",       "severity": "high"     }
+  ],
+
+  "capabilities": [
+    { "id": "llm.invoke",   "required": true  },
+    { "id": "tool.run",     "required": true  },
+    { "id": "memory.read",  "required": true  },
+    { "id": "memory.write", "required": true  },
+    { "id": "vector.search","required": false },
+    { "id": "audit.write",  "required": false }
+  ],
+
+  "hooks": {
+    "supported_events": [
+      "before_detect", "after_detect", "on_classify", "on_score",
+      "before_correct", "after_correct", "before_validate",
+      "on_complete", "on_error"
+    ],
+    "builtin": ["builtin.tracing", "builtin.audit"],
+    "example_hooks": [
+      "hooks/examples/custom_pattern_hook.rs",
+      "hooks/examples/prometheus_audit_hook.rs",
+      "hooks/examples/webhook_notifier_hook.rs"
+    ]
+  },
+
+  "distribution": {
+    "mcp_server": true,
+    "claude_code_plugin": true,
+    "uar_skill": true,
+    "binary_releases": ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "aarch64-apple-darwin"]
+  }
+}

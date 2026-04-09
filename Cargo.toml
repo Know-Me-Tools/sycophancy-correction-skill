@@ -1,0 +1,38 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/sycophancy-core",
+    "crates/sycophancy-mcp",
+]
+
+[workspace.package]
+version      = "1.0.0"
+edition      = "2021"
+license      = "MIT"
+authors      = ["Prometheus AGS <info@prometheus-ags.ai>"]
+repository   = "https://github.com/prometheus-ags/sycophancy-correction"
+homepage     = "https://agentskills.io/skills/sycophancy-correction"
+keywords     = ["llm", "sycophancy", "agents", "evaluation", "mcp"]
+categories   = ["artificial-intelligence"]
+
+[workspace.dependencies]
+# Async runtime
+tokio          = { version = "1", features = ["full"] }
+# MCP SDK  (modelcontextprotocol/rust-sdk)
+rmcp           = { version = "0.1", features = ["server", "transport-io"] }
+# Serialization
+serde          = { version = "1", features = ["derive"] }
+serde_json     = "1"
+toml           = "0.8"
+# Async traits
+async-trait    = "0.1"
+# Error handling
+anyhow         = "1"
+thiserror      = "2"
+# Logging / tracing
+tracing            = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+# Utilities
+uuid    = { version = "1", features = ["v4"] }
+chrono  = { version = "0.4", features = ["serde"] }
+regex   = "1"

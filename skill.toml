@@ -1,0 +1,72 @@
+# ╔══════════════════════════════════════════════════════════════╗
+# ║  skill.toml — sycophancy.correction v1.0.0                  ║
+# ║  agentskills.io compliant manifest + runtime config          ║
+# ╚══════════════════════════════════════════════════════════════╝
+
+# ── Skill Identity ─────────────────────────────────────────────────────────────
+
+[skill]
+id          = "sycophancy.correction"
+version     = "1.0.0"
+author      = "Prometheus AGS"
+homepage    = "https://agentskills.io/skills/sycophancy-correction"
+repository  = "https://github.com/prometheus-ags/sycophancy-correction"
+license     = "MIT"
+description = """
+Detects and corrects sycophantic patterns in LLM completions, prompts,
+agent descriptors, and pipeline configurations.
+
+Implements eight canonical heuristics (S-01 through S-08), a PMPO-driven
+execution loop, a priority-ordered hook chain for extensibility, and full
+Cedar governance support.
+"""
+
+# ── Detection ──────────────────────────────────────────────────────────────────
+
+[detection]
+# Disable specific patterns by ID
+disabled_patterns = []
+
+# Override per-pattern severity: { "S-07" = "high" }
+[detection.severity_overrides]
+# "S-01" = "high"
+
+# Multi-sample divergence check settings
+divergence_threshold = 0.35
+sample_n             = 3
+sample_temperature   = 0.7
+
+# ── Correction ────────────────────────────────────────────────────────────────
+
+[correction]
+# Score at or above which correction should be flagged as mandatory for callers
+mandatory_correction_threshold = 0.6
+# Max correction loop passes before surfacing both versions and halting
+max_passes     = 2
+# Score below which a second-pass validation is considered clean
+clean_threshold = 0.10
+
+# ── Hook System ───────────────────────────────────────────────────────────────
+
+[hooks]
+tracing_hook = true   # built-in structured logging hook
+audit_hook   = true   # built-in audit-trail hook
+
+# Paths to external hook shared libraries (future: dynamic loading via libloading)
+external_hooks = []
+
+# ── Audit Trail ───────────────────────────────────────────────────────────────
+
+[audit]
+enabled = true
+# backend = "stdout" | "file" | "surreal_db"
+backend     = "stdout"
+# surreal_dsn = "ws://localhost:8000" (required when backend = "surreal_db")
+
+# ── LLM Provider ─────────────────────────────────────────────────────────────
+
+[llm]
+base_url          = "https://api.anthropic.com"
+critic_model      = "claude-sonnet-4-6"
+rewrite_model     = "claude-sonnet-4-6"
+critic_max_tokens = 2048

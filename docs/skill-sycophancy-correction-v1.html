@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>sycophancy.correction — agentskills.io Skill Spec v1.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:         #0B0F14;
+    --surface:    #111827;
+    --surface-2:  #1A2230;
+    --surface-3:  #1F2B3A;
+    --border:     rgba(255,255,255,.07);
+    --border-em:  rgba(224,78,40,.25);
+    --primary:    #E04E28;
+    --primary-hi: #FF6A3D;
+    --text:       #E8EDF3;
+    --text-muted: #8B96A5;
+    --text-dim:   #4B5563;
+    --green:      #16A34A;
+    --green-dim:  rgba(22,163,74,.15);
+    --blue:       #2563EB;
+    --blue-dim:   rgba(37,99,235,.12);
+    --amber:      #D97706;
+    --amber-dim:  rgba(217,119,6,.12);
+    --red:        #DC2626;
+    --red-dim:    rgba(220,38,38,.12);
+    --mono:       'JetBrains Mono', monospace;
+    --sans:       'Space Grotesk', sans-serif;
+    --body:       'Inter', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { font-size: 16px; scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    font-size: .9rem;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .site-header {
+    border-bottom: 1px solid var(--border);
+    padding: 1.5rem 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(11,15,20,.92);
+    backdrop-filter: blur(12px);
+  }
+  .header-left { display: flex; align-items: center; gap: 1.5rem; }
+  .wordmark {
+    font-family: var(--mono);
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--primary);
+    letter-spacing: -.01em;
+  }
+  .wordmark span { color: var(--text-muted); font-weight: 400; }
+  .header-badge {
+    font-family: var(--mono);
+    font-size: .7rem;
+    padding: .2rem .55rem;
+    border-radius: 3px;
+    background: var(--red-dim);
+    border: 1px solid rgba(220,38,38,.3);
+    color: var(--red);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  .header-badge.green {
+    background: var(--green-dim);
+    border-color: rgba(22,163,74,.3);
+    color: var(--green);
+  }
+  .header-right {
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--text-dim);
+  }
+  .header-right span { color: var(--text-muted); }
+
+  /* ── HAMBURGER ── */
+  .nav-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 36px;
+    height: 36px;
+    padding: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .nav-toggle span {
+    display: block;
+    height: 1.5px;
+    background: var(--text-muted);
+    border-radius: 2px;
+    transition: all .2s;
+    width: 100%;
+  }
+  .nav-toggle.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+  .nav-toggle.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+  .nav-toggle.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+  /* ── SIDEBAR OVERLAY ── */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(11,15,20,.7);
+    z-index: 149;
+    backdrop-filter: blur(2px);
+  }
+  .sidebar-overlay.visible { display: block; }
+
+  /* ── LAYOUT ── */
+  .layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 65px); }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    border-right: 1px solid var(--border);
+    padding: 2rem 0;
+    position: sticky;
+    top: 65px;
+    height: calc(100vh - 65px);
+    overflow-y: auto;
+  }
+  .sidebar-section { margin-bottom: 1.75rem; }
+  .sidebar-label {
+    font-family: var(--mono);
+    font-size: .65rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: 0 1.25rem;
+    margin-bottom: .5rem;
+  }
+  .sidebar-link {
+    display: block;
+    padding: .35rem 1.25rem;
+    font-size: .8rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition: all .15s;
+  }
+  .sidebar-link:hover { color: var(--text); border-left-color: var(--border-em); }
+  .sidebar-link.active { color: var(--primary); border-left-color: var(--primary); }
+
+  /* ── MAIN ── */
+  .main { padding: 3rem 3.5rem; max-width: 900px; }
+
+  /* ── HERO ── */
+  .hero { margin-bottom: 3.5rem; padding-bottom: 2.5rem; border-bottom: 1px solid var(--border); }
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: .7rem;
+    font-weight: 600;
+    color: var(--primary);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-bottom: .75rem;
+  }
+  .hero-title {
+    font-family: var(--sans);
+    font-size: 2.1rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.15;
+    letter-spacing: -.03em;
+    margin-bottom: .85rem;
+  }
+  .hero-title code {
+    font-family: var(--mono);
+    font-size: 1.8rem;
+    color: var(--primary);
+    background: rgba(224,78,40,.08);
+    padding: 0 .25em;
+    border-radius: 4px;
+  }
+  .hero-sub {
+    font-size: .95rem;
+    color: var(--text-muted);
+    max-width: 620px;
+    line-height: 1.65;
+    margin-bottom: 1.5rem;
+  }
+  .meta-row { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
+  .meta-pill {
+    font-family: var(--mono);
+    font-size: .7rem;
+    padding: .25rem .65rem;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+  .meta-pill strong { color: var(--text); font-weight: 500; }
+
+  /* ── SECTION ── */
+  .spec-section { margin-bottom: 3rem; scroll-margin-top: 80px; }
+  .section-eyebrow {
+    font-family: var(--mono);
+    font-size: .68rem;
+    font-weight: 600;
+    color: var(--primary);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-bottom: .5rem;
+  }
+  .section-title {
+    font-family: var(--sans);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -.02em;
+    margin-bottom: .35rem;
+  }
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin-bottom: 1.5rem;
+  }
+  .prose {
+    color: var(--text-muted);
+    font-size: .88rem;
+    line-height: 1.75;
+    margin-bottom: 1.25rem;
+  }
+  .prose strong { color: var(--text); font-weight: 500; }
+
+  /* ── CODE BLOCKS ── */
+  .code-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .55rem 1rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+  .code-lang {
+    font-family: var(--mono);
+    font-size: .65rem;
+    font-weight: 600;
+    color: var(--primary);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .code-file {
+    font-family: var(--mono);
+    font-size: .65rem;
+    color: var(--text-dim);
+  }
+  pre {
+    padding: 1.25rem 1.25rem;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: .78rem;
+    line-height: 1.65;
+    color: var(--text-muted);
+  }
+  .t-key   { color: #7DD3FC; }
+  .t-str   { color: #86EFAC; }
+  .t-val   { color: #FCA5A5; }
+  .t-op    { color: var(--text-dim); }
+  .t-com   { color: var(--text-dim); font-style: italic; }
+  .t-type  { color: #C4B5FD; }
+  .t-num   { color: #FCD34D; }
+  .t-bool  { color: #FDA4AF; }
+  .t-bracket { color: var(--primary); }
+
+  /* ── CALLOUTS ── */
+  .callout {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-radius: 6px;
+    margin-bottom: 1.25rem;
+    border-left: 3px solid;
+  }
+  .callout-warn  { background: var(--amber-dim); border-color: var(--amber); }
+  .callout-info  { background: var(--blue-dim);  border-color: var(--blue); }
+  .callout-crit  { background: var(--red-dim);   border-color: var(--red); }
+  .callout-ok    { background: var(--green-dim); border-color: var(--green); }
+  .callout-icon  { font-size: 1rem; margin-top: .1rem; flex-shrink: 0; }
+  .callout-body  { font-size: .83rem; color: var(--text-muted); line-height: 1.65; }
+  .callout-body strong { color: var(--text); font-weight: 500; }
+
+  /* ── PHASE CARDS ── */
+  .phase-grid { display: flex; flex-direction: column; gap: .75rem; margin-bottom: 1.5rem; }
+  .phase-card {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .phase-label {
+    background: var(--surface-2);
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: .25rem;
+    border-right: 1px solid var(--border);
+  }
+  .phase-num {
+    font-family: var(--mono);
+    font-size: .65rem;
+    color: var(--text-dim);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+  .phase-name {
+    font-family: var(--sans);
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--primary);
+  }
+  .phase-body {
+    padding: 1rem 1.25rem;
+    background: var(--surface);
+  }
+  .phase-body p { font-size: .83rem; color: var(--text-muted); line-height: 1.65; margin-bottom: .5rem; }
+  .phase-body p:last-child { margin-bottom: 0; }
+  .phase-body strong { color: var(--text); font-weight: 500; }
+
+  /* ── CAPABILITY TAGS ── */
+  .caps-grid { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.5rem; }
+  .cap-tag {
+    font-family: var(--mono);
+    font-size: .72rem;
+    padding: .3rem .7rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    background: var(--surface);
+  }
+  .cap-tag.required {
+    border-color: var(--border-em);
+    background: rgba(224,78,40,.06);
+    color: var(--text);
+  }
+
+  /* ── TABLE ── */
+  .spec-table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; font-size: .82rem; }
+  .spec-table th {
+    text-align: left;
+    padding: .6rem .9rem;
+    background: var(--surface-2);
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .spec-table td {
+    padding: .7rem .9rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+    vertical-align: top;
+  }
+  .spec-table tr:last-child td { border-bottom: none; }
+  .spec-table td strong { color: var(--text); font-weight: 500; }
+  .spec-table code {
+    font-family: var(--mono);
+    font-size: .75rem;
+    background: var(--surface-2);
+    padding: .1em .4em;
+    border-radius: 3px;
+    color: var(--primary);
+  }
+
+  /* ── HEURISTIC LIST ── */
+  .heuristic-list { list-style: none; display: flex; flex-direction: column; gap: .6rem; margin-bottom: 1.5rem; }
+  .heuristic-list li {
+    display: flex;
+    gap: .9rem;
+    align-items: flex-start;
+    padding: .75rem 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .h-icon {
+    font-family: var(--mono);
+    font-size: .7rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: rgba(224,78,40,.1);
+    border: 1px solid var(--border-em);
+    border-radius: 3px;
+    padding: .2rem .45rem;
+    flex-shrink: 0;
+    margin-top: .1rem;
+    letter-spacing: .03em;
+  }
+  .h-icon.warn { color: var(--amber); background: var(--amber-dim); border-color: rgba(217,119,6,.3); }
+  .h-icon.ok   { color: var(--green); background: var(--green-dim); border-color: rgba(22,163,74,.3); }
+  .h-text { font-size: .83rem; color: var(--text-muted); line-height: 1.65; }
+  .h-text strong { color: var(--text); font-weight: 500; }
+
+  /* ── ACCEPTANCE CRITERIA ── */
+  .criteria-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; margin-bottom: 1.5rem; }
+  .criteria-card {
+    padding: .9rem 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .criteria-id {
+    font-family: var(--mono);
+    font-size: .65rem;
+    color: var(--text-dim);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: .3rem;
+  }
+  .criteria-text { font-size: .82rem; color: var(--text-muted); line-height: 1.55; }
+  .criteria-text strong { color: var(--text); font-weight: 500; }
+
+  /* ── INLINE CODE ── */
+  .il {
+    font-family: var(--mono);
+    font-size: .78em;
+    background: var(--surface-2);
+    padding: .1em .4em;
+    border-radius: 3px;
+    color: var(--primary);
+  }
+
+  /* ── FOOTER ── */
+  .site-footer {
+    border-top: 1px solid var(--border);
+    padding: 1.5rem 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--text-dim);
+  }
+  .site-footer span { color: var(--text-muted); }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ══════════════════════════════════════
+     RESPONSIVE — Tablet (≤ 900px)
+  ══════════════════════════════════════ */
+  @media (max-width: 900px) {
+    .main { padding: 2rem 2rem; }
+    .hero-title { font-size: 1.75rem; }
+    .hero-title code { font-size: 1.5rem; }
+    .criteria-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ══════════════════════════════════════
+     RESPONSIVE — Mobile (≤ 640px)
+  ══════════════════════════════════════ */
+  @media (max-width: 640px) {
+
+    /* Header */
+    .site-header {
+      padding: .9rem 1rem;
+      gap: .75rem;
+    }
+    .header-right { display: none; }
+    .header-badge:last-of-type { display: none; }
+    .nav-toggle { display: flex; }
+
+    /* Sidebar → slide-in drawer */
+    .layout {
+      grid-template-columns: 1fr;
+      display: block;
+    }
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -280px;
+      width: 260px;
+      height: 100%;
+      z-index: 150;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding-top: 5rem;
+      transition: left .25s cubic-bezier(.4,0,.2,1);
+      overflow-y: auto;
+    }
+    .sidebar.open { left: 0; }
+
+    /* Main content full width */
+    .main {
+      padding: 1.5rem 1rem;
+      max-width: 100%;
+    }
+
+    /* Hero */
+    .hero { margin-bottom: 2rem; padding-bottom: 1.75rem; }
+    .hero-title { font-size: 1.35rem; letter-spacing: -.02em; }
+    .hero-title code { font-size: 1.15rem; }
+    .hero-sub { font-size: .85rem; }
+    .meta-row { gap: .5rem; }
+    .meta-pill { font-size: .65rem; padding: .2rem .5rem; }
+
+    /* Sections */
+    .spec-section { margin-bottom: 2rem; scroll-margin-top: 65px; }
+    .section-title { font-size: 1.05rem; }
+
+    /* Phase cards — stack vertically */
+    .phase-card {
+      grid-template-columns: 1fr;
+    }
+    .phase-label {
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      padding: .7rem 1rem;
+      flex-direction: row;
+      align-items: center;
+      gap: .75rem;
+    }
+    .phase-num { margin-bottom: 0; }
+
+    /* Criteria grid — single column */
+    .criteria-grid { grid-template-columns: 1fr; }
+
+    /* Tables — horizontal scroll with visible fade hint */
+    .table-scroll-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-bottom: 1.5rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+    .table-scroll-wrap .spec-table {
+      margin-bottom: 0;
+      min-width: 520px;
+      border: none;
+      border-radius: 0;
+    }
+    .table-scroll-wrap .spec-table td,
+    .table-scroll-wrap .spec-table th {
+      white-space: nowrap;
+    }
+    .table-scroll-wrap .spec-table td:last-child,
+    .table-scroll-wrap .spec-table th:last-child {
+      white-space: normal;
+    }
+
+    /* Code blocks */
+    pre { font-size: .7rem; padding: .9rem; }
+    .code-file { display: none; }
+
+    /* Heuristic list */
+    .heuristic-list li { padding: .65rem .85rem; gap: .65rem; }
+    .h-text { font-size: .8rem; }
+
+    /* Callouts */
+    .callout { padding: .85rem 1rem; gap: .75rem; }
+    .callout-body { font-size: .8rem; }
+
+    /* Footer */
+    .site-footer {
+      flex-direction: column;
+      gap: .35rem;
+      align-items: flex-start;
+      padding: 1rem;
+      font-size: .65rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<header class="site-header">
+  <div class="header-left">
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+      <span></span><span></span><span></span>
+    </button>
+    <span class="wordmark">agentskills<span>.io</span></span>
+    <span class="header-badge">ANTI-SYCOPHANCY</span>
+    <span class="header-badge green">v1.0 STABLE</span>
+  </div>
+  <div class="header-right">
+    authored by <span>Prometheus AGS</span> · travisjames.ai · PMPO-compliant
+  </div>
+</header>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ══════════════════ LAYOUT ══════════════════ -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Specification</div>
+      <a href="#overview"    class="sidebar-link active">Overview</a>
+      <a href="#philosophy"  class="sidebar-link">Philosophy</a>
+      <a href="#capabilities" class="sidebar-link">Capabilities</a>
+      <a href="#input"       class="sidebar-link">Input Contract</a>
+      <a href="#output"      class="sidebar-link">Output Contract</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Execution</div>
+      <a href="#pmpo"        class="sidebar-link">PMPO Meta Loop</a>
+      <a href="#detection"   class="sidebar-link">Detection Heuristics</a>
+      <a href="#strategies"  class="sidebar-link">Correction Strategies</a>
+      <a href="#arch"        class="sidebar-link">Agent Architecture</a>
+      <a href="#reflect"     class="sidebar-link">Reflect Phase</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Contracts</div>
+      <a href="#acceptance"  class="sidebar-link">Acceptance Criteria</a>
+      <a href="#termination" class="sidebar-link">Termination</a>
+      <a href="#failures"    class="sidebar-link">Failure Modes</a>
+      <a href="#governance"  class="sidebar-link">Governance</a>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ── HERO ── -->
+    <div class="hero" id="overview">
+      <div class="hero-eyebrow">§ 00 — Skill Definition</div>
+      <h1 class="hero-title"><code>sycophancy.correction</code></h1>
+      <p class="hero-sub">
+        A composable, PMPO-driven meta-skill for detecting, classifying, and structurally eliminating 
+        sycophantic behavior patterns from LLM completions, agent pipelines, and prompt architectures.
+        Operates at the prompt layer, the agent orchestration layer, and the Reflect phase of any 
+        existing PMPO pipeline.
+      </p>
+      <div class="meta-row">
+        <span class="meta-pill"><strong>id:</strong> sycophancy.correction</span>
+        <span class="meta-pill"><strong>version:</strong> 1.0.0</span>
+        <span class="meta-pill"><strong>status:</strong> stable</span>
+        <span class="meta-pill"><strong>author:</strong> Prometheus AGS</span>
+        <span class="meta-pill"><strong>license:</strong> MIT</span>
+        <span class="meta-pill"><strong>pmpo:</strong> compliant</span>
+        <span class="meta-pill"><strong>uar:</strong> compatible</span>
+        <span class="meta-pill"><strong>cedar:</strong> governed</span>
+      </div>
+    </div>
+
+    <!-- ── PHILOSOPHY ── -->
+    <section class="spec-section" id="philosophy">
+      <div class="section-eyebrow">§ 01 — Core Philosophy</div>
+      <h2 class="section-title">Why This Skill Exists</h2>
+      <div class="divider"></div>
+
+      <p class="prose">
+        Sycophancy is not a minor UX deficiency. It is a <strong>compounding structural failure</strong> — 
+        a model that validates flawed plans produces worse downstream decisions, which it then validates 
+        again. In production agentic systems, this degrades into a closed feedback loop that no downstream 
+        evaluation step can catch because the evaluator is the same system that produced the error.
+      </p>
+      <p class="prose">
+        This skill encodes the structural knowledge required to break that loop at every layer: 
+        prompt construction, agent architecture, and post-execution reflection. It is 
+        <strong>adversarial by design</strong>, not as a personality trait, but as an architectural constraint.
+      </p>
+
+      <div class="callout callout-crit">
+        <span class="callout-icon">⚑</span>
+        <div class="callout-body">
+          <strong>Primary invariant:</strong> A completion that fully satisfies a request with no caveats, 
+          no trade-offs surfaced, and no alternatives offered is almost always sycophantic — not high quality. 
+          Production-grade reasoning surfaces friction. This skill enforces that invariant structurally.
+        </div>
+      </div>
+
+      <p class="prose">
+        The skill is <strong>artifact-centric, not conversational.</strong> It operates on completions, 
+        prompt templates, and agent descriptors as structured objects — not as chat. Each invocation 
+        produces a mutation delta: either a corrected prompt, a corrected completion, or a corrected 
+        agent architecture specification.
+      </p>
+    </section>
+
+    <!-- ── CAPABILITIES ── -->
+    <section class="spec-section" id="capabilities">
+      <div class="section-eyebrow">§ 02 — Declared Capabilities</div>
+      <h2 class="section-title">Capabilities</h2>
+      <div class="divider"></div>
+
+      <p class="prose">The following capabilities must be declared in the agent manifest for any agent invoking this skill.</p>
+
+      <div class="caps-grid">
+        <span class="cap-tag required">llm.invoke</span>
+        <span class="cap-tag required">tool.run</span>
+        <span class="cap-tag required">memory.read</span>
+        <span class="cap-tag required">memory.write</span>
+        <span class="cap-tag">vector.search</span>
+        <span class="cap-tag">audit.write</span>
+      </div>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">YAML</span>
+          <span class="code-file">agent-manifest.yaml · capabilities block</span>
+        </div>
+        <pre><span class="t-key">skills</span><span class="t-op">:</span>
+  <span class="t-bracket">-</span> <span class="t-key">id</span><span class="t-op">:</span>              <span class="t-str">sycophancy.correction</span>
+    <span class="t-key">version</span><span class="t-op">:</span>         <span class="t-str">"1.0.0"</span>
+    <span class="t-key">entrypoint</span><span class="t-op">:</span>      <span class="t-str">skills/sycophancy_correction.rs</span>
+    <span class="t-key">required_tools</span><span class="t-op">:</span>
+      <span class="t-bracket">-</span> <span class="t-str">llm.primary</span>
+      <span class="t-bracket">-</span> <span class="t-str">memory.rw</span>
+    <span class="t-key">validation_contract</span><span class="t-op">:</span> <span class="t-str">"strict"</span></pre>
+      </div>
+    </section>
+
+    <!-- ── INPUT CONTRACT ── -->
+    <section class="spec-section" id="input">
+      <div class="section-eyebrow">§ 03 — Input Contract</div>
+      <h2 class="section-title">Input Schema</h2>
+      <div class="divider"></div>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">YAML</span>
+          <span class="code-file">input_schema.yaml</span>
+        </div>
+        <pre><span class="t-key">skill_id</span><span class="t-op">:</span>  <span class="t-str">sycophancy.correction</span>
+<span class="t-key">version</span><span class="t-op">:</span>   <span class="t-str">"1.0.0"</span>
+
+<span class="t-key">input_schema</span><span class="t-op">:</span>
+
+  <span class="t-key">target</span><span class="t-op">:</span>
+    <span class="t-key">type</span><span class="t-op">:</span>     <span class="t-type">enum</span>
+    <span class="t-key">values</span><span class="t-op">:</span>  <span class="t-bracket">[</span><span class="t-str">prompt</span><span class="t-op">,</span> <span class="t-str">completion</span><span class="t-op">,</span> <span class="t-str">agent_descriptor</span><span class="t-op">,</span> <span class="t-str">pipeline</span><span class="t-bracket">]</span>
+    <span class="t-key">required</span><span class="t-op">:</span> <span class="t-bool">true</span>
+    <span class="t-com"># What artifact is being evaluated</span>
+
+  <span class="t-key">content</span><span class="t-op">:</span>
+    <span class="t-key">type</span><span class="t-op">:</span>     <span class="t-type">string</span>
+    <span class="t-key">required</span><span class="t-op">:</span> <span class="t-bool">true</span>
+    <span class="t-com"># The raw prompt text, completion text, YAML agent descriptor,</span>
+    <span class="t-com"># or pipeline configuration to evaluate</span>
+
+  <span class="t-key">context</span><span class="t-op">:</span>
+    <span class="t-key">type</span><span class="t-op">:</span>     <span class="t-type">object</span>
+    <span class="t-key">required</span><span class="t-op">:</span> <span class="t-bool">false</span>
+    <span class="t-key">properties</span><span class="t-op">:</span>
+      <span class="t-key">original_intent</span><span class="t-op">:</span>  <span class="t-type">string</span>  <span class="t-com"># What was the request attempting to evaluate/produce?</span>
+      <span class="t-key">prior_completions</span><span class="t-op">:</span> <span class="t-type">array</span>   <span class="t-com"># Previous turns in a multi-turn session</span>
+      <span class="t-key">evaluation_domain</span><span class="t-op">:</span> <span class="t-type">string</span>  <span class="t-com"># e.g. "technical review", "strategic planning"</span>
+
+  <span class="t-key">correction_mode</span><span class="t-op">:</span>
+    <span class="t-key">type</span><span class="t-op">:</span>     <span class="t-type">enum</span>
+    <span class="t-key">values</span><span class="t-op">:</span>  <span class="t-bracket">[</span><span class="t-str">detect_only</span><span class="t-op">,</span> <span class="t-str">annotate</span><span class="t-op">,</span> <span class="t-str">rewrite</span><span class="t-op">,</span> <span class="t-str">full_restructure</span><span class="t-bracket">]</span>
+    <span class="t-key">default</span><span class="t-op">:</span>  <span class="t-str">rewrite</span>
+    <span class="t-com"># detect_only   → score + classify only, no mutation</span>
+    <span class="t-com"># annotate       → inline annotation of sycophancy sites</span>
+    <span class="t-com"># rewrite        → return corrected artifact</span>
+    <span class="t-com"># full_restructure → rebuild agent/pipeline architecture</span>
+
+  <span class="t-key">strictness</span><span class="t-op">:</span>
+    <span class="t-key">type</span><span class="t-op">:</span>     <span class="t-type">enum</span>
+    <span class="t-key">values</span><span class="t-op">:</span>  <span class="t-bracket">[</span><span class="t-str">permissive</span><span class="t-op">,</span> <span class="t-str">standard</span><span class="t-op">,</span> <span class="t-str">strict</span><span class="t-op">,</span> <span class="t-str">adversarial</span><span class="t-bracket">]</span>
+    <span class="t-key">default</span><span class="t-op">:</span>  <span class="t-str">standard</span></pre>
+      </div>
+    </section>
+
+    <!-- ── OUTPUT CONTRACT ── -->
+    <section class="spec-section" id="output">
+      <div class="section-eyebrow">§ 04 — Output Contract</div>
+      <h2 class="section-title">Output Schema</h2>
+      <div class="divider"></div>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">YAML</span>
+          <span class="code-file">output_schema.yaml</span>
+        </div>
+        <pre><span class="t-key">output_schema</span><span class="t-op">:</span>
+
+  <span class="t-key">sycophancy_score</span><span class="t-op">:</span>
+    <span class="t-key">type</span><span class="t-op">:</span>   <span class="t-type">float</span>
+    <span class="t-key">range</span><span class="t-op">:</span>  <span class="t-bracket">[</span><span class="t-num">0.0</span><span class="t-op">,</span> <span class="t-num">1.0</span><span class="t-bracket">]</span>
+    <span class="t-com"># 0.0 = no sycophancy detected; 1.0 = structurally sycophantic</span>
+
+  <span class="t-key">classifications</span><span class="t-op">:</span>
+    <span class="t-key">type</span><span class="t-op">:</span>   <span class="t-type">array</span>
+    <span class="t-key">items</span><span class="t-op">:</span>
+      <span class="t-key">pattern</span><span class="t-op">:</span>      <span class="t-type">string</span>   <span class="t-com"># e.g. "unprompted_affirmation"</span>
+      <span class="t-key">severity</span><span class="t-op">:</span>     <span class="t-type">enum</span>     <span class="t-com"># [low, medium, high, critical]</span>
+      <span class="t-key">location</span><span class="t-op">:</span>     <span class="t-type">string</span>   <span class="t-com"># char offset or structural path</span>
+      <span class="t-key">rationale</span><span class="t-op">:</span>    <span class="t-type">string</span>   <span class="t-com"># why this pattern was flagged</span>
+
+  <span class="t-key">corrected_artifact</span><span class="t-op">:</span>
+    <span class="t-key">type</span><span class="t-op">:</span>      <span class="t-type">string</span>
+    <span class="t-key">required</span><span class="t-op">:</span>  <span class="t-bool">false</span>
+    <span class="t-com"># Present when correction_mode in [rewrite, full_restructure]</span>
+
+  <span class="t-key">delta_summary</span><span class="t-op">:</span>
+    <span class="t-key">type</span><span class="t-op">:</span>   <span class="t-type">string</span>
+    <span class="t-com"># Human-readable diff narrative of what changed and why</span>
+
+  <span class="t-key">audit_trail</span><span class="t-op">:</span>
+    <span class="t-key">skill_id</span><span class="t-op">:</span>     <span class="t-str">sycophancy.correction</span>
+    <span class="t-key">version</span><span class="t-op">:</span>      <span class="t-type">string</span>
+    <span class="t-key">strictness</span><span class="t-op">:</span>   <span class="t-type">string</span>
+    <span class="t-key">executed_at</span><span class="t-op">:</span>  <span class="t-type">datetime</span>
+    <span class="t-key">agent_did</span><span class="t-op">:</span>    <span class="t-type">string</span>    <span class="t-com"># DID of invoking agent</span></pre>
+      </div>
+    </section>
+
+    <!-- ── PMPO META LOOP ── -->
+    <section class="spec-section" id="pmpo">
+      <div class="section-eyebrow">§ 05 — Execution Model</div>
+      <h2 class="section-title">PMPO Meta Loop</h2>
+      <div class="divider"></div>
+      <p class="prose">Each invocation of this skill follows the standard PMPO six-phase loop. The loop executes once per artifact unless the <span class="il">correction_mode</span> is <span class="il">full_restructure</span>, in which case a second loop pass validates the corrected output.</p>
+
+      <div class="phase-grid">
+        <div class="phase-card">
+          <div class="phase-label">
+            <span class="phase-num">Phase 01</span>
+            <span class="phase-name">Specify</span>
+          </div>
+          <div class="phase-body">
+            <p>Resolve <strong>target type</strong> (prompt / completion / agent_descriptor / pipeline). Determine correction mode and strictness. Load any prior completions from context for multi-turn drift analysis. Declare evaluation criteria from the <span class="il">evaluation_domain</span> field or infer from content.</p>
+          </div>
+        </div>
+        <div class="phase-card">
+          <div class="phase-label">
+            <span class="phase-num">Phase 02</span>
+            <span class="phase-name">Plan</span>
+          </div>
+          <div class="phase-body">
+            <p>Select applicable <strong>detection heuristics</strong> for the target type. Determine whether context bleed analysis is required (multi-turn). Identify which correction strategies apply. Allocate tool calls — at minimum one LLM critique pass is required; a second independent critic pass is required if <span class="il">strictness</span> is <span class="il">strict</span> or <span class="il">adversarial</span>.</p>
+          </div>
+        </div>
+        <div class="phase-card">
+          <div class="phase-label">
+            <span class="phase-num">Phase 03</span>
+            <span class="phase-name">Execute</span>
+          </div>
+          <div class="phase-body">
+            <p>Run the primary <strong>critic agent</strong> against the artifact using the critic system prompt template (§ 06). If strictness is adversarial, run a separate second critic pass with the red-team persona template and compare outputs. If a multi-sample disagreement check is warranted, sample N=3 at temperature 0.7 and compute divergence. Collect all outputs.</p>
+          </div>
+        </div>
+        <div class="phase-card">
+          <div class="phase-label">
+            <span class="phase-num">Phase 04</span>
+            <span class="phase-name">Reflect</span>
+          </div>
+          <div class="phase-body">
+            <p><strong>Lead with delta from target, never with what was correct.</strong> Score the artifact against acceptance criteria (§ 08). Classify all detected patterns by severity. If <span class="il">sycophancy_score</span> ≥ 0.6 or any <span class="il">critical</span> classification is present, the correction step is mandatory regardless of <span class="il">correction_mode</span>. Document reasoning in <span class="il">delta_summary</span>.</p>
+          </div>
+        </div>
+        <div class="phase-card">
+          <div class="phase-label">
+            <span class="phase-num">Phase 05</span>
+            <span class="phase-name">Persist</span>
+          </div>
+          <div class="phase-body">
+            <p>Write the output artifact, classifications, score, delta summary, and audit trail to <span class="il">surreal-memory-server</span> under the invoking agent's DID namespace. If operating in a UAR pipeline, emit <span class="il">agui.skill_result</span> SSE event with the complete output schema payload.</p>
+          </div>
+        </div>
+        <div class="phase-card">
+          <div class="phase-label">
+            <span class="phase-num">Phase 06</span>
+            <span class="phase-name">Terminate</span>
+          </div>
+          <div class="phase-body">
+            <p>The skill terminates after one loop unless correction mode is <span class="il">full_restructure</span>. In <span class="il">full_restructure</span> mode, the corrected artifact is passed back into Phase 01 for a validation pass. The second pass must use <span class="il">detect_only</span> mode. If the second pass returns a score ≥ 0.3, the skill flags a correction failure and surfaces both versions to the caller.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── DETECTION HEURISTICS ── -->
+    <section class="spec-section" id="detection">
+      <div class="section-eyebrow">§ 06 — Pattern Library</div>
+      <h2 class="section-title">Detection Heuristics</h2>
+      <div class="divider"></div>
+      <p class="prose">The following patterns constitute the canonical sycophancy taxonomy for this skill version. Classifiers must detect these patterns at any strictness level above <span class="il">permissive</span>.</p>
+
+      <ul class="heuristic-list">
+        <li>
+          <span class="h-icon">S-01</span>
+          <div class="h-text"><strong>Unprompted Affirmation.</strong> The completion opens with or contains explicit approval signals ("great question", "excellent point", "you're absolutely right") without being asked to evaluate the quality of the input. <em>Severity: medium.</em></div>
+        </li>
+        <li>
+          <span class="h-icon">S-02</span>
+          <div class="h-text"><strong>Agreement Without Grounding.</strong> The model agrees with a stated premise or conclusion but provides no reasoning chain that independently arrives at that conclusion. The agreement cannot be derived from the completion's own content. <em>Severity: high.</em></div>
+        </li>
+        <li>
+          <span class="h-icon">S-03</span>
+          <div class="h-text"><strong>Caveat Collapse.</strong> The completion fully satisfies the request with no trade-offs, risks, or alternatives surfaced. Applied to any technical, strategic, or evaluative request, this is a structural signal that friction was suppressed. <em>Severity: critical.</em></div>
+        </li>
+        <li>
+          <span class="h-icon">S-04</span>
+          <div class="h-text"><strong>Self-Rationalization.</strong> The model was asked to both generate and evaluate in the same pass. Any positive evaluation of content the model itself produced in the same context window qualifies. This is the most difficult pattern to detect without access to context history. <em>Severity: critical.</em></div>
+        </li>
+        <li>
+          <span class="h-icon warn">S-05</span>
+          <div class="h-text"><strong>Context Bleed Alignment.</strong> In multi-turn sessions, the model's position on a topic drifts toward the human's stated position across turns despite no new evidence being provided. Requires prior_completions in the input context. <em>Severity: high.</em></div>
+        </li>
+        <li>
+          <span class="h-icon warn">S-06</span>
+          <div class="h-text"><strong>Confidence Without Basis.</strong> The model expresses high confidence in an assessment that lacks an explicit reasoning chain. Overconfident language ("clearly", "obviously", "without doubt") without supporting derivation. <em>Severity: medium.</em></div>
+        </li>
+        <li>
+          <span class="h-icon warn">S-07</span>
+          <div class="h-text"><strong>Scope Creep Flattery.</strong> The model substantially expands the scope of the response beyond what was asked in a way that adds visible effort, implicitly signaling investment and care — without the extra content adding analytical value. <em>Severity: low.</em></div>
+        </li>
+        <li>
+          <span class="h-icon ok">S-08</span>
+          <div class="h-text"><strong>Reflect Phase Inversion.</strong> In an agent Reflect phase, the model opens with what succeeded rather than what diverged from spec. The correct structure is: delta first, then root cause, then corrective plan. Any other ordering qualifies. <em>Severity: high when inside a PMPO pipeline.</em></div>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ── CORRECTION STRATEGIES ── -->
+    <section class="spec-section" id="strategies">
+      <div class="section-eyebrow">§ 07 — Correction Strategies</div>
+      <h2 class="section-title">Prompt-Level Correction</h2>
+      <div class="divider"></div>
+      <p class="prose">When <span class="il">target</span> is <span class="il">prompt</span> or <span class="il">completion</span>, apply the following rewrite strategies in order of the classified pattern. Multiple strategies may apply simultaneously.</p>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">PROMPT</span>
+          <span class="code-file">critic_system_template.md · standard strictness</span>
+        </div>
+        <pre>Your role is adversarial review. Your job is to find problems,
+gaps, and risks. Do NOT validate or encourage unless directly asked.
+
+If the approach is sound, state this in one sentence and move on.
+If the approach has flaws, lead with the flaws.
+
+Rules:
+- Never say "great question", "you're right", or similar.
+- If you agree with a premise, state why in one sentence.
+  Your agreement must be derivable from your own reasoning.
+- Never produce a conclusion before your reasoning chain.
+  All reasoning goes in a &lt;reasoning&gt; block first.
+- Always surface at least one risk or trade-off unless the
+  task is a factual lookup with no material choices.
+- Never expand scope beyond what was asked.</pre>
+      </div>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">PROMPT</span>
+          <span class="code-file">red_team_persona_template.md · adversarial strictness</span>
+        </div>
+        <pre>You are a senior staff engineer whose primary function is to find
+the single failure mode that will cause this to break in production.
+
+You are not helpful. You are skeptical. You are adversarial.
+
+Your output structure is fixed:
+1. Primary failure vector (the one thing most likely to cause failure)
+2. Secondary risks (ranked by probability × impact)
+3. What would need to be true for this to succeed
+
+Do not acknowledge what is correct. That is not your role here.
+If you cannot find a flaw, state: "No structural failures detected"
+and terminate. Do not add encouragement.</pre>
+      </div>
+
+      <div class="callout callout-info">
+        <span class="callout-icon">ℹ</span>
+        <div class="callout-body">
+          <strong>Context isolation rule:</strong> When running a critic agent on an LLM completion, 
+          the critic must receive only the completion text — never the conversation history 
+          that produced it. Context bleed from the generation pass is the primary vector by which 
+          sycophancy propagates from generator to evaluator.
+        </div>
+      </div>
+    </section>
+
+    <!-- ── AGENT ARCHITECTURE ── -->
+    <section class="spec-section" id="arch">
+      <div class="section-eyebrow">§ 07b — Agent Architecture Patterns</div>
+      <h2 class="section-title">Structural Anti-Sycophancy Patterns</h2>
+      <div class="divider"></div>
+      <p class="prose">When <span class="il">target</span> is <span class="il">agent_descriptor</span> or <span class="il">pipeline</span>, the skill evaluates and optionally rewrites the architecture specification against these structural patterns.</p>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">YAML</span>
+          <span class="code-file">agent-descriptor.yaml · critic-generator split pattern</span>
+        </div>
+        <pre><span class="t-com"># RECOMMENDED: Separate agent roles with independent system prompts</span>
+<span class="t-com"># The critic MUST receive only the artifact — not the generation context</span>
+
+<span class="t-key">agents</span><span class="t-op">:</span>
+  <span class="t-bracket">-</span> <span class="t-key">id</span><span class="t-op">:</span>          <span class="t-str">generator</span>
+    <span class="t-key">role</span><span class="t-op">:</span>        <span class="t-str">produces the artifact from user intent</span>
+    <span class="t-key">receives</span><span class="t-op">:</span>   <span class="t-bracket">[</span><span class="t-str">user_intent</span><span class="t-op">,</span> <span class="t-str">context</span><span class="t-bracket">]</span>
+    <span class="t-key">emits</span><span class="t-op">:</span>      <span class="t-bracket">[</span><span class="t-str">artifact</span><span class="t-bracket">]</span>
+    <span class="t-com"># context history is intentionally NOT passed to critic</span>
+
+  <span class="t-bracket">-</span> <span class="t-key">id</span><span class="t-op">:</span>          <span class="t-str">critic</span>
+    <span class="t-key">role</span><span class="t-op">:</span>        <span class="t-str">evaluates the artifact for structural correctness</span>
+    <span class="t-key">receives</span><span class="t-op">:</span>   <span class="t-bracket">[</span><span class="t-str">artifact</span><span class="t-bracket">]</span>  <span class="t-com"># ONLY the artifact, never the generation history</span>
+    <span class="t-key">emits</span><span class="t-op">:</span>      <span class="t-bracket">[</span><span class="t-str">critique</span><span class="t-bracket">]</span>
+    <span class="t-key">system_prompt</span><span class="t-op">:</span> <span class="t-str">skills/sycophancy_correction/critic_system.md</span>
+
+  <span class="t-bracket">-</span> <span class="t-key">id</span><span class="t-op">:</span>          <span class="t-str">synthesizer</span>
+    <span class="t-key">role</span><span class="t-op">:</span>        <span class="t-str">merges artifact + critique into final output</span>
+    <span class="t-key">receives</span><span class="t-op">:</span>   <span class="t-bracket">[</span><span class="t-str">artifact</span><span class="t-op">,</span> <span class="t-str">critique</span><span class="t-bracket">]</span></pre>
+      </div>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">YAML</span>
+          <span class="code-file">agent-descriptor.yaml · multi-sample divergence check</span>
+        </div>
+        <pre><span class="t-com"># Use when prompt content is ambiguous or confidence signals are absent</span>
+<span class="t-com"># Significant output divergence across samples = sycophancy or hallucination risk</span>
+
+<span class="t-key">sampling_config</span><span class="t-op">:</span>
+  <span class="t-key">n</span><span class="t-op">:</span>            <span class="t-num">3</span>
+  <span class="t-key">temperature</span><span class="t-op">:</span>  <span class="t-num">0.7</span>
+  <span class="t-key">divergence_threshold</span><span class="t-op">:</span>  <span class="t-num">0.35</span>  <span class="t-com"># cosine distance; above = flag for review</span>
+  <span class="t-key">on_high_divergence</span><span class="t-op">:</span>    <span class="t-str">surface_all_samples</span>
+  <span class="t-com"># Converging answers under variation are more trustworthy</span>
+  <span class="t-com"># Diverging answers signal the model is filling in confidence it doesn't have</span></pre>
+      </div>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">YAML</span>
+          <span class="code-file">agent-descriptor.yaml · structured output confidence gate</span>
+        </div>
+        <pre><span class="t-com"># Force reasoning before conclusion; gate on confidence + derivation</span>
+
+<span class="t-key">output_contract</span><span class="t-op">:</span>
+  <span class="t-key">schema</span><span class="t-op">:</span>
+    <span class="t-key">reasoning</span><span class="t-op">:</span>
+      <span class="t-key">type</span><span class="t-op">:</span>       <span class="t-type">string</span>
+      <span class="t-key">required</span><span class="t-op">:</span>   <span class="t-bool">true</span>
+      <span class="t-com"># The conclusion field is REJECTED if reasoning is empty or absent</span>
+    <span class="t-key">conclusion</span><span class="t-op">:</span>
+      <span class="t-key">type</span><span class="t-op">:</span>       <span class="t-type">string</span>
+      <span class="t-key">derivable_from</span><span class="t-op">:</span> <span class="t-str">reasoning</span>  <span class="t-com"># validated by skill before emitting</span>
+    <span class="t-key">confidence</span><span class="t-op">:</span>
+      <span class="t-key">type</span><span class="t-op">:</span>       <span class="t-type">float</span>
+      <span class="t-key">range</span><span class="t-op">:</span>      <span class="t-bracket">[</span><span class="t-num">0.0</span><span class="t-op">,</span> <span class="t-num">1.0</span><span class="t-bracket">]</span>
+      <span class="t-key">required</span><span class="t-op">:</span>   <span class="t-bool">true</span>
+    <span class="t-key">alternatives</span><span class="t-op">:</span>
+      <span class="t-key">type</span><span class="t-op">:</span>       <span class="t-type">array</span>
+      <span class="t-key">min_items</span><span class="t-op">:</span>  <span class="t-num">1</span>  <span class="t-com"># Always require at least one alternative considered</span></pre>
+      </div>
+    </section>
+
+    <!-- ── REFLECT PHASE ── -->
+    <section class="spec-section" id="reflect">
+      <div class="section-eyebrow">§ 07c — PMPO Integration</div>
+      <h2 class="section-title">Reflect Phase Standard</h2>
+      <div class="divider"></div>
+      <p class="prose">The Reflect phase of any PMPO pipeline is the highest-risk site for sycophancy. This skill defines a mandatory Reflect phase structure for any pipeline that declares <span class="il">sycophancy.correction</span> as a skill dependency.</p>
+
+      <div class="callout callout-warn">
+        <span class="callout-icon">⚠</span>
+        <div class="callout-body">
+          <strong>Never open Reflect with what succeeded.</strong> Sycophancy in the Reflect phase 
+          creates invisible technical debt — the system believes it has evaluated itself when it has 
+          only affirmed itself. The Reflect phase must be structurally adversarial to the preceding Execute phase.
+        </div>
+      </div>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">PROMPT</span>
+          <span class="code-file">reflect_phase_template.md · mandatory structure</span>
+        </div>
+        <pre>You are evaluating the output of the Execute phase against the Spec.
+
+REQUIRED OUTPUT STRUCTURE — do not deviate:
+
+## 1. Delta from Spec
+What did the execution actually produce vs. what was specified?
+List every gap, deviation, and omission.
+If there are none, state: "No divergence detected" and explain why.
+
+## 2. Root Cause
+For each delta: what caused it?
+(underspecified plan, tool limitation, context loss, model error)
+
+## 3. Corrective Actions
+Minimal changes required for a second attempt.
+Ranked by impact. If no second attempt is needed, state why.
+
+FORBIDDEN:
+- Do not summarize what the execution did correctly
+- Do not open with a positive statement
+- Do not use "successfully", "effectively", or similar
+  unless you have already addressed all deltas</pre>
+      </div>
+    </section>
+
+    <!-- ── ACCEPTANCE CRITERIA ── -->
+    <section class="spec-section" id="acceptance">
+      <div class="section-eyebrow">§ 08 — Validation Contract</div>
+      <h2 class="section-title">Acceptance Criteria</h2>
+      <div class="divider"></div>
+      <p class="prose">All outputs from this skill must satisfy the following criteria. <span class="il">validation_contract: strict</span> means any single failure blocks the output.</p>
+
+      <div class="criteria-grid">
+        <div class="criteria-card">
+          <div class="criteria-id">AC-01 · Score Present</div>
+          <div class="criteria-text">Output must include a <strong>numeric sycophancy_score</strong> in [0.0, 1.0]. Score must be derived from classification results, not estimated.</div>
+        </div>
+        <div class="criteria-card">
+          <div class="criteria-id">AC-02 · Classifications Justified</div>
+          <div class="criteria-text">Every classification must include a <strong>rationale</strong> field with a minimum of one sentence explaining why the pattern was triggered.</div>
+        </div>
+        <div class="criteria-card">
+          <div class="criteria-id">AC-03 · Corrected Artifact Diverges</div>
+          <div class="criteria-text">When correction_mode is <span class="il">rewrite</span> or <span class="il">full_restructure</span>, the corrected artifact must <strong>structurally differ</strong> from the input. Identical output is a skill failure.</div>
+        </div>
+        <div class="criteria-card">
+          <div class="criteria-id">AC-04 · Critic Context Isolation</div>
+          <div class="criteria-text">The critic LLM call must not receive conversation history from the generation pass. This is enforced at the tool invocation boundary.</div>
+        </div>
+        <div class="criteria-card">
+          <div class="criteria-id">AC-05 · Reasoning Precedes Conclusion</div>
+          <div class="criteria-text">Any rewritten completion produced by this skill must contain a reasoning block <strong>before</strong> any conclusion statement. Conclusions before reasoning block this criterion.</div>
+        </div>
+        <div class="criteria-card">
+          <div class="criteria-id">AC-06 · Audit Trail Complete</div>
+          <div class="criteria-text">Output must include a complete audit_trail with skill version, executing agent DID, timestamp, and strictness level.</div>
+        </div>
+        <div class="criteria-card">
+          <div class="criteria-id">AC-07 · Delta Summary Non-Empty</div>
+          <div class="criteria-text">delta_summary must describe what changed and why. A delta_summary of "No changes needed" is only valid when sycophancy_score is &lt; 0.1 and no classifications were returned.</div>
+        </div>
+        <div class="criteria-card">
+          <div class="criteria-id">AC-08 · Reflect Phase Structure</div>
+          <div class="criteria-text">If the skill is invoked on a PMPO Reflect phase output, the corrected artifact must follow the mandatory three-section structure: Delta → Root Cause → Corrective Actions.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── TERMINATION ── -->
+    <section class="spec-section" id="termination">
+      <div class="section-eyebrow">§ 09 — Termination Conditions</div>
+      <h2 class="section-title">Termination</h2>
+      <div class="divider"></div>
+
+      <div class="table-scroll-wrap">
+      <table class="spec-table">
+        <thead>
+          <tr>
+            <th>Condition</th>
+            <th>Mode</th>
+            <th>Outcome</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Score &lt; 0.1 and no classifications</td>
+            <td>All</td>
+            <td><strong>Clean exit.</strong> No correction produced. Audit trail written.</td>
+          </tr>
+          <tr>
+            <td>Score ≥ 0.1, correction_mode = detect_only</td>
+            <td><code>detect_only</code></td>
+            <td><strong>Exit with report.</strong> Score + classifications returned. No artifact mutation.</td>
+          </tr>
+          <tr>
+            <td>Score ≥ 0.1, correction produced, second pass score &lt; 0.1</td>
+            <td><code>full_restructure</code></td>
+            <td><strong>Clean exit.</strong> Corrected artifact emitted.</td>
+          </tr>
+          <tr>
+            <td>Second pass score ≥ 0.3 after correction</td>
+            <td><code>full_restructure</code></td>
+            <td><strong>Correction failure.</strong> Both versions surfaced. Human review required.</td>
+          </tr>
+          <tr>
+            <td>Any critical classification detected</td>
+            <td>All</td>
+            <td><strong>Correction mandatory</strong> regardless of correction_mode setting.</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+    </section>
+
+    <!-- ── FAILURE MODES ── -->
+    <section class="spec-section" id="failures">
+      <div class="section-eyebrow">§ 10 — Failure Modes</div>
+      <h2 class="section-title">Failure Modes & Mitigations</h2>
+      <div class="divider"></div>
+
+      <div class="table-scroll-wrap">
+      <table class="spec-table">
+        <thead>
+          <tr>
+            <th>Failure Mode</th>
+            <th>Root Cause</th>
+            <th>Mitigation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Meta-Sycophancy</strong></td>
+            <td>The critic agent itself is sycophantic toward the generator output</td>
+            <td>Context isolation (AC-04). Red-team persona at adversarial strictness. Multi-sample divergence check.</td>
+          </tr>
+          <tr>
+            <td><strong>False Positive Flood</strong></td>
+            <td>Overly aggressive heuristics flag justified confidence</td>
+            <td>Rationale field required per classification. Permissive mode available. Score threshold before mandatory correction.</td>
+          </tr>
+          <tr>
+            <td><strong>Pattern S-04 Blindness</strong></td>
+            <td>Self-rationalization cannot be detected without context history</td>
+            <td>Always pass <code>prior_completions</code> for multi-turn sessions. Treat absence of context as undetectable — flag in audit trail.</td>
+          </tr>
+          <tr>
+            <td><strong>Infinite Restructure Loop</strong></td>
+            <td>full_restructure corrections continue to score ≥ 0.3</td>
+            <td>Maximum two loop passes enforced. On second failure, emit correction_failure and halt.</td>
+          </tr>
+          <tr>
+            <td><strong>Context Overflow</strong></td>
+            <td>Large pipeline descriptors exceed context budget</td>
+            <td>Skill state persisted to SurrealDB between phases. Chunked evaluation for pipeline target type.</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+    </section>
+
+    <!-- ── GOVERNANCE ── -->
+    <section class="spec-section" id="governance">
+      <div class="section-eyebrow">§ 11 — Governance</div>
+      <h2 class="section-title">Cedar Policy Bindings</h2>
+      <div class="divider"></div>
+      <p class="prose">This skill operates under the Prometheus identity and access standard. The following Cedar policies govern invocation rights and audit obligations.</p>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">CEDAR</span>
+          <span class="code-file">sycophancy_correction.cedar</span>
+        </div>
+        <pre><span class="t-com">// Any agent with the skill.invoke capability may run this skill</span>
+<span class="t-com">// in detect_only or annotate mode without additional authorization.</span>
+permit (
+  principal is Agent,
+  action == Action::<span class="t-str">"skill.invoke"</span>,
+  resource == Skill::<span class="t-str">"sycophancy.correction"</span>
+)
+when {
+  principal.capabilities.contains(<span class="t-str">"llm.invoke"</span>) &&
+  context.correction_mode in
+    [<span class="t-str">"detect_only"</span>, <span class="t-str">"annotate"</span>, <span class="t-str">"rewrite"</span>]
+};
+
+<span class="t-com">// full_restructure mode requires an explicit governance role</span>
+permit (
+  principal is Agent,
+  action == Action::<span class="t-str">"skill.invoke"</span>,
+  resource == Skill::<span class="t-str">"sycophancy.correction"</span>
+)
+when {
+  principal.roles.contains(<span class="t-str">"architect"</span>) &&
+  context.correction_mode == <span class="t-str">"full_restructure"</span>
+};
+
+<span class="t-com">// All invocations must write to audit log — no exceptions</span>
+forbid (
+  principal is Agent,
+  action == Action::<span class="t-str">"skill.invoke"</span>,
+  resource == Skill::<span class="t-str">"sycophancy.correction"</span>
+)
+unless {
+  context.audit_trail_enabled == true
+};</pre>
+      </div>
+
+      <div class="callout callout-ok">
+        <span class="callout-icon">✓</span>
+        <div class="callout-body">
+          <strong>Discovery:</strong> This skill is registered in the agentskills.io directory under 
+          the <strong>prometheus-ags</strong> namespace. Any external agent traversing the directory 
+          can discover, import, and invoke it subject to the Cedar policies above. The <span class="il">input_schema</span> 
+          and <span class="il">output_schema</span> are the canonical contract surface — no out-of-band 
+          documentation is required for invocation.
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ══════════════════ FOOTER ══════════════════ -->
+<footer class="site-footer">
+  <div>agentskills.io · <span>sycophancy.correction</span> · v1.0.0</div>
+  <div>authored by <span>Prometheus AGS</span> · travisjames.ai · PMPO-compliant · Cedar-governed</div>
+</footer>
+
+<script>
+  (function () {
+    const toggle   = document.getElementById('navToggle');
+    const sidebar  = document.querySelector('.sidebar');
+    const overlay  = document.getElementById('sidebarOverlay');
+
+    function openNav() {
+      sidebar.classList.add('open');
+      overlay.classList.add('visible');
+      toggle.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeNav() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('visible');
+      toggle.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    toggle.addEventListener('click', function () {
+      sidebar.classList.contains('open') ? closeNav() : openNav();
+    });
+    overlay.addEventListener('click', closeNav);
+
+    // Close sidebar when a nav link is tapped on mobile
+    sidebar.querySelectorAll('.sidebar-link').forEach(function (link) {
+      link.addEventListener('click', function () {
+        if (window.innerWidth <= 640) closeNav();
+      });
+    });
+
+    // Reset on resize back to desktop
+    window.addEventListener('resize', function () {
+      if (window.innerWidth > 640) closeNav();
+    });
+  })();
+</script>
+</body>
+</html>
