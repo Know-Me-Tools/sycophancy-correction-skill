@@ -13,27 +13,35 @@ Canonical Agent Skills metadata lives in `SKILL.md`; a compatibility index for t
 
 ### Claude Code (Recommended)
 
-1. Build the binary:
+1. Install the binary (one-time):
+
 ```bash
 cargo build --release
+cp target/release/sycophancy-correction ~/.local/bin/
+# or: cargo install --path crates/sycophancy-mcp
 ```
 
-2. The included `.mcp.json` starts the server from the repo via Cargo when Claude Code opens this directory:
+2. The included `.mcp.json` invokes the installed binary from PATH:
+
 ```json
 {
   "mcpServers": {
     "sycophancy-correction": {
-      "command": "cargo",
-      "args": ["run", "--quiet", "--bin", "sycophancy-correction", "--", "--config", "skill.toml"]
+      "command": "sycophancy-correction",
+      "args": ["--config", "skill.toml"]
     }
   }
 }
 ```
 
-3. Or add globally to Claude Code:
+3. Verify the install:
+
 ```bash
-claude mcp add sycophancy-correction ./target/release/sycophancy-correction -- --config ./skill.toml
+./scripts/smoke-test.sh
 ```
+
+For skill development against live source (recompiles on every invocation),
+copy `.mcp.dev.json` over `.mcp.json`.
 
 ### Environment Variables
 
@@ -42,8 +50,6 @@ claude mcp add sycophancy-correction ./target/release/sycophancy-correction -- -
 | `ANTHROPIC_API_KEY` | Yes      | Used by the correction LLM calls     |
 | `RUST_LOG`          | No       | Log level: `trace/debug/info/warn`   |
 | `SKILL_CONFIG`      | No       | Path to skill.toml (default: `./skill.toml`) |
-
-If dependencies are not already cached locally, the first Cargo-based launch requires network access to download crates.
 
 ---
 
