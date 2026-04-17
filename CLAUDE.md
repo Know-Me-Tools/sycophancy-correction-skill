@@ -47,7 +47,7 @@ Two-crate workspace:
 - `SkillInput` / `SkillOutput` — the input/output contract (matches agentskills.json schema)
 - `TargetType` — `Prompt | Completion | AgentDescriptor | Pipeline`
 - `CorrectionMode` — `DetectOnly | Annotate | Rewrite | FullRestructure`
-- `Strictness` — `Permissive | Standard | Strict | Adversarial`
+- `Strictness` — `Permissive | Standard | Strict`
 - `Severity` — `Low | Medium | High | Critical` with weighted scoring via `.weight()`
 - `DetectionResult` — score + classifications + correction_mandatory flag
 - `HookResult` / `HookMutation` — hook return semantics

@@ -75,7 +75,6 @@ impl StrictnessStr {
         match self.0.as_str() {
             "permissive" => Strictness::Permissive,
             "strict" => Strictness::Strict,
-            "adversarial" => Strictness::Adversarial,
             _ => Strictness::Standard,
         }
     }
@@ -190,8 +189,8 @@ pub fn tool_definitions() -> Vec<Tool> {
                     },
                     "strictness": {
                         "type": "string",
-                        "enum": ["permissive", "standard", "strict", "adversarial"],
-                        "description": "Detection sensitivity. 'adversarial' runs a red-team pass.",
+                        "enum": ["permissive", "standard", "strict"],
+                        "description": "Detection sensitivity.",
                         "default": "standard"
                     },
                     "context": {
@@ -259,7 +258,7 @@ pub fn tool_definitions() -> Vec<Tool> {
                     },
                     "strictness": {
                         "type": "string",
-                        "enum": ["permissive", "standard", "strict", "adversarial"],
+                        "enum": ["permissive", "standard", "strict"],
                         "default": "standard"
                     },
                     "context": {

@@ -81,7 +81,6 @@ pub enum Strictness {
     #[default]
     Standard,
     Strict,
-    Adversarial,
 }
 
 impl Strictness {
@@ -90,7 +89,6 @@ impl Strictness {
             Strictness::Permissive => "permissive",
             Strictness::Standard => "standard",
             Strictness::Strict => "strict",
-            Strictness::Adversarial => "adversarial",
         }
     }
 }

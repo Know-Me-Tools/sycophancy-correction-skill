@@ -61,12 +61,6 @@ impl Detector {
             }
         }
 
-        // Stricter modes surface more
-        if *strictness == Strictness::Adversarial {
-            // Re-run patterns that require context with relaxed thresholds
-            // (handled per-pattern; flag here that we're in adversarial mode)
-        }
-
         let score = self.scorer.score(&matches);
         let has_critical = matches.iter().any(|m| m.severity == Severity::Critical);
         let mandatory =

@@ -32,7 +32,7 @@
       },
       "strictness": {
         "type": "string",
-        "enum": ["permissive", "standard", "strict", "adversarial"],
+        "enum": ["permissive", "standard", "strict"],
         "default": "standard"
       }
     }

@@ -275,7 +275,7 @@ impl SycophancyServer {
             "author":     &self.config.skill.author,
             "patterns":   ["S-01","S-02","S-03","S-04","S-05","S-06","S-07","S-08"],
             "modes":      ["detect_only","annotate","rewrite","full_restructure"],
-            "strictness": ["permissive","standard","strict","adversarial"],
+            "strictness": ["permissive","standard","strict"],
             "pmpo":       "compliant",
             "uar":        "compatible",
             "validation_contract": "strict",
