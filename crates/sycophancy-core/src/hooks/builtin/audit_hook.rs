@@ -9,7 +9,14 @@ use serde_json::json;
 
 /// Built-in hook that writes a structured audit record on every completion.
 ///
-/// Backends: `stdout` (default), `file`, `surreal_db`.
+/// Backends:
+/// - `stdout` (default): emitted via `tracing::info!` so it lands on stderr
+///   when the MCP server initializes its subscriber. Real stdout is reserved
+///   for JSON-RPC traffic and must never be written to from a hook running
+///   inside an MCP server (see `crates/sycophancy-mcp/src/main.rs`).
+/// - `file`: currently routed to stderr with an `[AUDIT]` prefix until a
+///   rotation-aware file backend lands.
+/// - `surreal_db`: stubbed; intended to write through `surreal-memory-server`.
 pub struct AuditHook {
     pub backend: AuditBackend,
     pub skill_version: String,
@@ -48,16 +55,22 @@ impl Hook for AuditHook {
             "hook_log":       &output.audit_trail.hook_log,
         });
 
+        let payload = serde_json::to_string(&record).unwrap_or_default();
         match &self.backend {
+            // NOTE: emits via `tracing` -> stderr. Writing to real stdout here
+            // would corrupt the MCP JSON-RPC stream (see sycophancy-mcp/src/main.rs).
             AuditBackend::Stdout => {
-                println!("{}", serde_json::to_string(&record).unwrap_or_default());
+                tracing::info!(
+                    target: "sycophancy.audit",
+                    audit = %payload,
+                    "skill.complete"
+                );
             }
             AuditBackend::File => {
-                // In production: append to a rotation-aware log file
-                eprintln!(
-                    "[AUDIT] {}",
-                    serde_json::to_string(&record).unwrap_or_default()
-                );
+                // In production: append to a rotation-aware log file.
+                // For now, route to stderr with a distinct prefix so it never
+                // lands on the JSON-RPC stdout channel.
+                eprintln!("[AUDIT] {payload}");
             }
             AuditBackend::SurrealDb => {
                 // In production: issue a SurrealDB CREATE statement via the surreal-memory-server
