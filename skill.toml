@@ -27,14 +27,14 @@ Cedar governance support.
 # Disable specific patterns by ID
 disabled_patterns = []
 
-# Override per-pattern severity: { "S-07" = "high" }
-[detection.severity_overrides]
-# "S-01" = "high"
-
 # Multi-sample divergence check settings
 divergence_threshold = 0.35
 sample_n             = 3
 sample_temperature   = 0.7
+
+# Override per-pattern severity: { "S-07" = "high" }
+[detection.severity_overrides]
+# "S-01" = "high"
 
 # ── Correction ────────────────────────────────────────────────────────────────
 
