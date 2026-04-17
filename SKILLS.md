@@ -1,13 +1,5 @@
 # Skills Index
 
-This repository provides a canonical Agent Skills file at `SKILL.md`.
-
-## Available skills
-
-- `sycophancy-correction` — detect and correct sycophantic patterns in prompts, completions, agent descriptors, pipeline configs, and PMPO Reflect outputs
-
-## Compatibility note
-
-- The official Agent Skills specification uses `SKILL.md` (singular) as the canonical file format.
-- This `SKILLS.md` file exists as a compatibility/index file for tools or repository scanners that look specifically for a root skills manifest.
-- If a tool supports the official format, it should prefer `SKILL.md`.
+This file exists for tools that look for `SKILLS.md` (plural) at the repository root.
+The canonical Agent Skills manifest is `SKILL.md` (singular) per the agentskills.io
+specification. Read that file for skill details.
