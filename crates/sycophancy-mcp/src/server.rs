@@ -23,38 +23,124 @@ use tokio::sync::Mutex;
 
 use crate::tools::{AnalyzeReflectPhaseInput, CorrectSycophancyInput, DetectSycophancyInput};
 
-// ── Shared LLM client (Anthropic) ────────────────────────────────────────────
+// ── Shared LLM client ─────────────────────────────────────────────────────────
+//
+// Speaks the OpenAI-compatible `/chat/completions` wire format. Defaults to
+// the local openai-proxy (git@github.com:GQAdonis/openai-proxy.git, :8181),
+// which bridges Codex CLI's ChatGPT/OpenAI auth, so no API key is required
+// for the default config. Set `SYCOPHANCY_LLM_API_KEY` if `llm.base_url` is
+// pointed at a provider that actually validates the Authorization header.
 
-pub struct AnthropicClient {
+pub struct ProxyLlmClient {
     base_url: String,
     model: String,
+    http: reqwest::Client,
 }
 
-impl AnthropicClient {
+impl ProxyLlmClient {
     pub fn new(base_url: String, model: String) -> Self {
-        Self { base_url, model }
+        Self {
+            base_url,
+            model,
+            http: reqwest::Client::new(),
+        }
     }
 }
 
+#[derive(serde::Serialize)]
+struct ChatRequest<'a> {
+    model: &'a str,
+    messages: Vec<ChatMessage<'a>>,
+    max_tokens: u32,
+    temperature: f32,
+}
+
+#[derive(serde::Serialize)]
+struct ChatMessage<'a> {
+    role: &'a str,
+    content: &'a str,
+}
+
+#[derive(serde::Deserialize)]
+struct ChatResponse {
+    choices: Vec<ChatChoice>,
+}
+
+#[derive(serde::Deserialize)]
+struct ChatChoice {
+    message: ChatResponseMessage,
+}
+
+#[derive(serde::Deserialize)]
+struct ChatResponseMessage {
+    content: Option<String>,
+}
+
 #[async_trait::async_trait]
-impl sycophancy_core::skill::corrector::LlmClient for AnthropicClient {
+impl sycophancy_core::skill::corrector::LlmClient for ProxyLlmClient {
     async fn complete(
         &self,
-        _system: &str,
+        system: &str,
         user: &str,
         max_tokens: u32,
     ) -> sycophancy_core::error::SkillResult<String> {
-        // In a real deployment: call the Anthropic messages API.
-        // The API key is read from ANTHROPIC_API_KEY env var.
-        // Stubbed here to keep the binary dependency-light.
-        let _ = (&self.base_url, &self.model, max_tokens);
-        let response = format!(
-            "<reasoning>\nStub correction — replace AnthropicClient::complete \
-             with a real HTTP call to {}/v1/messages using model {}.\n</reasoning>\n\n\
-             [CORRECTED ARTIFACT — stub]\n{user}",
-            self.base_url, self.model
-        );
-        Ok(response)
+        let url = format!("{}/chat/completions", self.base_url.trim_end_matches('/'));
+
+        let mut req = self.http.post(&url).json(&ChatRequest {
+            model: &self.model,
+            messages: vec![
+                ChatMessage {
+                    role: "system",
+                    content: system,
+                },
+                ChatMessage {
+                    role: "user",
+                    content: user,
+                },
+            ],
+            max_tokens,
+            temperature: 0.2,
+        });
+
+        if let Ok(key) = std::env::var("SYCOPHANCY_LLM_API_KEY") {
+            req = req.bearer_auth(key);
+        }
+
+        let resp = req.send().await.map_err(|e| {
+            sycophancy_core::error::SkillError::LlmError(format!(
+                "request to {url} failed: {e:?}"
+            ))
+        })?;
+
+        let status = resp.status();
+        let body = resp.text().await.map_err(|e| {
+            sycophancy_core::error::SkillError::LlmError(format!(
+                "failed to read response body from {url}: {e}"
+            ))
+        })?;
+
+        if !status.is_success() {
+            return Err(sycophancy_core::error::SkillError::LlmError(format!(
+                "{url} returned HTTP {status}: {body}"
+            )));
+        }
+
+        let parsed: ChatResponse = serde_json::from_str(&body).map_err(|e| {
+            sycophancy_core::error::SkillError::LlmError(format!(
+                "failed to parse chat completion response from {url}: {e} — body: {body}"
+            ))
+        })?;
+
+        parsed
+            .choices
+            .into_iter()
+            .next()
+            .and_then(|c| c.message.content)
+            .ok_or_else(|| {
+                sycophancy_core::error::SkillError::LlmError(format!(
+                    "{url} returned no completion content — body: {body}"
+                ))
+            })
     }
 }
 
@@ -63,13 +149,13 @@ impl sycophancy_core::skill::corrector::LlmClient for AnthropicClient {
 #[derive(Clone)]
 pub struct SycophancyServer {
     executor: Arc<Mutex<PmpoExecutor>>,
-    client: Arc<AnthropicClient>,
+    client: Arc<ProxyLlmClient>,
     config: SkillConfig,
 }
 
 impl SycophancyServer {
     pub fn new(executor: PmpoExecutor, config: SkillConfig) -> Self {
-        let client = Arc::new(AnthropicClient::new(
+        let client = Arc::new(ProxyLlmClient::new(
             config.llm.base_url.clone(),
             config.llm.critic_model.clone(),
         ));

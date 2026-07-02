@@ -64,9 +64,13 @@ backend     = "stdout"
 # surreal_dsn = "ws://localhost:8000" (required when backend = "surreal_db")
 
 # ── LLM Provider ─────────────────────────────────────────────────────────────
+# OpenAI-compatible /chat/completions endpoint. Defaults to the local
+# openai-proxy (:8181), which bridges Codex CLI's ChatGPT/OpenAI auth —
+# no separate API key required. Point base_url elsewhere for a different
+# OpenAI-compatible provider.
 
 [llm]
-base_url          = "https://api.anthropic.com"
-critic_model      = "claude-sonnet-4-6"
-rewrite_model     = "claude-sonnet-4-6"
+base_url          = "http://localhost:8181/v1"
+critic_model      = "gpt-5.4-mini"
+rewrite_model     = "gpt-5.5"
 critic_max_tokens = 2048

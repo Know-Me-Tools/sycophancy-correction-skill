@@ -148,7 +148,9 @@ pub enum AuditBackend {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct LlmConfig {
-    /// Provider base URL (defaults to Anthropic)
+    /// Provider base URL. An OpenAI-compatible `/chat/completions` endpoint —
+    /// defaults to the local openai-proxy (git@github.com:GQAdonis/openai-proxy.git,
+    /// bridges Codex CLI's ChatGPT/OpenAI auth), so no separate API key is needed.
     pub base_url: String,
     /// Model for critic passes
     pub critic_model: String,
@@ -161,9 +163,9 @@ pub struct LlmConfig {
 impl Default for LlmConfig {
     fn default() -> Self {
         Self {
-            base_url: "https://api.anthropic.com".into(),
-            critic_model: "claude-sonnet-4-6".into(),
-            rewrite_model: "claude-sonnet-4-6".into(),
+            base_url: "http://localhost:8181/v1".into(),
+            critic_model: "gpt-5.4-mini".into(),
+            rewrite_model: "gpt-5.5".into(),
             critic_max_tokens: 2048,
         }
     }

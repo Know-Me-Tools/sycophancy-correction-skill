@@ -18,7 +18,7 @@ cargo test -p sycophancy-mcp             # test MCP server only
 cargo test -p sycophancy-core -- <name>  # run a single test by name
 ```
 
-The binary is `target/release/sycophancy-correction`. It communicates over stdio (JSON-RPC) and requires `ANTHROPIC_API_KEY` in the environment.
+The binary is `target/release/sycophancy-correction`. It communicates over stdio (JSON-RPC). Its LLM client speaks the OpenAI-compatible `/chat/completions` wire format and defaults `llm.base_url` (in `skill.toml`) to a local openai-proxy at `http://localhost:8181/v1` — no API key needed by default. Set `SYCOPHANCY_LLM_API_KEY` only if `llm.base_url` is repointed at a provider that validates the Authorization header.
 
 Logging goes to stderr (MCP requirement — stdout is reserved for JSON-RPC). Control verbosity via `RUST_LOG=debug`.
 
@@ -37,7 +37,7 @@ Two-crate workspace:
 
 **`sycophancy-mcp`** (binary) — thin MCP transport layer:
 - `main.rs` — config loading, hook registration, executor construction, server launch
-- `server.rs` — `SycophancyServer` implements `rmcp::ServerHandler`. Contains `AnthropicClient` (currently stubbed). Four tool handlers delegate to `PmpoExecutor`.
+- `server.rs` — `SycophancyServer` implements `rmcp::ServerHandler`. Contains `ProxyLlmClient`, a real OpenAI-compatible `/chat/completions` client (default: local openai-proxy, :8181). Four tool handlers delegate to `PmpoExecutor`.
 - `tools.rs` — MCP tool schema definitions and string-to-enum parse helpers
 
 **Key data flow:** MCP tool call -> `SycophancyServer::call_tool` -> `PmpoExecutor::execute` -> hooks + detector + scorer + corrector -> `SkillOutput`
@@ -54,7 +54,7 @@ Two-crate workspace:
 
 ## Important Invariants
 
-- The `AnthropicClient` in `server.rs` is **stubbed** — it returns placeholder text. Real Anthropic API integration is the primary remaining work.
+- The `ProxyLlmClient` in `server.rs` makes real HTTP calls to `llm.base_url` (`skill.toml`) using the OpenAI-compatible `/chat/completions` format. `rewrite_model` is defined in config but not yet wired to a distinct client — both critic and rewrite passes currently use `critic_model`.
 - In `FullRestructure` mode, the corrected artifact runs through a second detection pass. If score >= `clean_threshold` (0.1), it loops. Max 2 passes, then `SkillError::CorrectionFailed`.
 - Critical classifications or score >= 0.6 mark correction as mandatory for callers, but `DetectOnly` remains report-only.
 - S-07 (Scope Creep Flattery) is suppressed at `Permissive` strictness.
