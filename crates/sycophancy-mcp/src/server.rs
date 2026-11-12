@@ -9,15 +9,15 @@
 use anyhow::Result;
 use rmcp::{
     model::{
-        CallToolRequestParam, CallToolResult, Content, Implementation, InitializeResult,
-        ListToolsResult, PaginatedRequestParam, ProtocolVersion, ServerCapabilities,
+        CallToolRequestParams, CallToolResponse, CallToolResult, ContentBlock, Implementation,
+        ListToolsResult, PaginatedRequestParams, ProtocolVersion, ServerCapabilities, ServerConfig,
         ToolsCapability,
     },
     service::{RequestContext, ServiceExt},
-    ServerHandler,
+    ErrorData, RoleServer, ServerHandler,
 };
 use serde_json::{json, Value};
-use std::sync::Arc;
+use std::{borrow::Cow, sync::Arc};
 use sycophancy_core::{config::SkillConfig, pmpo::PmpoExecutor};
 use tokio::sync::Mutex;
 
@@ -167,69 +167,67 @@ impl SycophancyServer {
     }
 }
 
-#[async_trait::async_trait]
 impl ServerHandler for SycophancyServer {
-    fn get_info(&self) -> InitializeResult {
-        InitializeResult {
-            protocol_version: ProtocolVersion::LATEST,
-            capabilities: ServerCapabilities {
-                tools: Some(ToolsCapability {
-                    list_changed: Some(false),
-                }),
-                ..Default::default()
-            },
-            server_info: Implementation {
-                name: "sycophancy-correction".into(),
-                version: self.config.skill.version.clone(),
-            },
-            instructions: Some(
+    fn get_info(&self) -> ServerConfig {
+        let mut tools = ToolsCapability::default();
+        tools.list_changed = Some(false);
+        let mut capabilities = ServerCapabilities::default();
+        capabilities.tools = Some(tools);
+
+        ServerConfig::new(capabilities)
+            .with_protocol_version(ProtocolVersion::V_2024_11_05)
+            .with_server_info(Implementation::new(
+                "sycophancy-correction",
+                self.config.skill.version.clone(),
+            ))
+            .with_instructions(
                 "Detects and corrects sycophantic patterns in LLM completions, \
                  prompts, agent descriptors, and pipeline configurations. \
-                 Use detect_sycophancy first, then correct_sycophancy if needed."
-                    .into(),
-            ),
-        }
+                 Use detect_sycophancy first, then correct_sycophancy if needed.",
+            )
     }
 
-    fn list_tools(
-        &self,
-        _request: PaginatedRequestParam,
-        _ctx: RequestContext<rmcp::RoleServer>,
-    ) -> impl std::future::Future<Output = Result<ListToolsResult, rmcp::Error>> + Send + '_ {
-        std::future::ready(Ok(ListToolsResult {
-            next_cursor: None,
-            tools: crate::tools::tool_definitions(),
-        }))
+    fn supported_protocol_versions(&self) -> Cow<'static, [ProtocolVersion]> {
+        Cow::Borrowed(ProtocolVersion::known_up_to(&ProtocolVersion::V_2024_11_05))
     }
 
-    fn call_tool(
+    async fn list_tools(
         &self,
-        request: CallToolRequestParam,
-        _ctx: RequestContext<rmcp::RoleServer>,
-    ) -> impl std::future::Future<Output = Result<CallToolResult, rmcp::Error>> + Send + '_ {
-        async move {
-            let args = request.arguments.map(Value::Object).unwrap_or(json!({}));
+        _request: Option<PaginatedRequestParams>,
+        _ctx: RequestContext<RoleServer>,
+    ) -> Result<ListToolsResult, ErrorData> {
+        Ok(ListToolsResult::with_all_items(
+            crate::tools::tool_definitions(),
+        ))
+    }
 
-            match request.name.as_ref() {
-                "detect_sycophancy" => {
-                    let input: DetectSycophancyInput = serde_json::from_value(args)
-                        .map_err(|e| rmcp::Error::invalid_params(e.to_string(), None))?;
-                    self.handle_detect(input).await
-                }
-                "correct_sycophancy" => {
-                    let input: CorrectSycophancyInput = serde_json::from_value(args)
-                        .map_err(|e| rmcp::Error::invalid_params(e.to_string(), None))?;
-                    self.handle_correct(input).await
-                }
-                "analyze_reflect_phase" => {
-                    let input: AnalyzeReflectPhaseInput = serde_json::from_value(args)
-                        .map_err(|e| rmcp::Error::invalid_params(e.to_string(), None))?;
-                    self.handle_reflect(input).await
-                }
-                "skill_info" => self.handle_info().await,
-                _ => Err(rmcp::Error::invalid_params("tool not found", None)),
+    async fn call_tool(
+        &self,
+        request: CallToolRequestParams,
+        _ctx: RequestContext<RoleServer>,
+    ) -> Result<CallToolResponse, ErrorData> {
+        let args = request.arguments.map(Value::Object).unwrap_or(json!({}));
+
+        let result = match request.name.as_ref() {
+            "detect_sycophancy" => {
+                let input: DetectSycophancyInput = serde_json::from_value(args)
+                    .map_err(|e| ErrorData::invalid_params(e.to_string(), None))?;
+                self.handle_detect(input).await
             }
-        }
+            "correct_sycophancy" => {
+                let input: CorrectSycophancyInput = serde_json::from_value(args)
+                    .map_err(|e| ErrorData::invalid_params(e.to_string(), None))?;
+                self.handle_correct(input).await
+            }
+            "analyze_reflect_phase" => {
+                let input: AnalyzeReflectPhaseInput = serde_json::from_value(args)
+                    .map_err(|e| ErrorData::invalid_params(e.to_string(), None))?;
+                self.handle_reflect(input).await
+            }
+            "skill_info" => self.handle_info().await,
+            _ => Err(ErrorData::invalid_params("tool not found", None)),
+        }?;
+        Ok(CallToolResponse::Complete(result))
     }
 }
 
@@ -239,7 +237,7 @@ impl SycophancyServer {
     async fn handle_detect(
         &self,
         input: DetectSycophancyInput,
-    ) -> Result<CallToolResult, rmcp::Error> {
+    ) -> Result<CallToolResult, ErrorData> {
         use sycophancy_core::skill::types::{CorrectionMode, SkillInput};
 
         let target = input.target.parse_target();
@@ -262,7 +260,7 @@ impl SycophancyServer {
         let output = executor
             .execute(skill_input, self.client.as_ref(), agent_did)
             .await
-            .map_err(|e| rmcp::Error::internal_error(e.to_string(), None))?;
+            .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
 
         let result = json!({
             "sycophancy_score": output.sycophancy_score,
@@ -273,18 +271,15 @@ impl SycophancyServer {
             "audit_trail":      output.audit_trail,
         });
 
-        Ok(CallToolResult {
-            content: vec![Content::text(
-                serde_json::to_string_pretty(&result).unwrap_or_default(),
-            )],
-            is_error: Some(false),
-        })
+        Ok(CallToolResult::success(vec![ContentBlock::text(
+            serde_json::to_string_pretty(&result).unwrap_or_default(),
+        )]))
     }
 
     async fn handle_correct(
         &self,
         input: CorrectSycophancyInput,
-    ) -> Result<CallToolResult, rmcp::Error> {
+    ) -> Result<CallToolResult, ErrorData> {
         use sycophancy_core::skill::types::SkillInput;
 
         let target = input.target.parse_target();
@@ -306,7 +301,7 @@ impl SycophancyServer {
         let output = executor
             .execute(skill_input, self.client.as_ref(), agent_did)
             .await
-            .map_err(|e| rmcp::Error::internal_error(e.to_string(), None))?;
+            .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
 
         let result = json!({
             "sycophancy_score":    output.sycophancy_score,
@@ -316,18 +311,15 @@ impl SycophancyServer {
             "audit_trail":         output.audit_trail,
         });
 
-        Ok(CallToolResult {
-            content: vec![Content::text(
-                serde_json::to_string_pretty(&result).unwrap_or_default(),
-            )],
-            is_error: Some(false),
-        })
+        Ok(CallToolResult::success(vec![ContentBlock::text(
+            serde_json::to_string_pretty(&result).unwrap_or_default(),
+        )]))
     }
 
     async fn handle_reflect(
         &self,
         input: AnalyzeReflectPhaseInput,
-    ) -> Result<CallToolResult, rmcp::Error> {
+    ) -> Result<CallToolResult, ErrorData> {
         let executor = self.executor.lock().await;
         let output = executor
             .execute_reflect_phase(
@@ -337,7 +329,7 @@ impl SycophancyServer {
                 input.correct.unwrap_or(true),
             )
             .await
-            .map_err(|e| rmcp::Error::internal_error(e.to_string(), None))?;
+            .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
 
         let result = json!({
             "s08_detected":       output.classifications.iter().any(|c| c.pattern_id == "S-08"),
@@ -346,15 +338,12 @@ impl SycophancyServer {
             "delta_summary":      output.delta_summary,
         });
 
-        Ok(CallToolResult {
-            content: vec![Content::text(
-                serde_json::to_string_pretty(&result).unwrap_or_default(),
-            )],
-            is_error: Some(false),
-        })
+        Ok(CallToolResult::success(vec![ContentBlock::text(
+            serde_json::to_string_pretty(&result).unwrap_or_default(),
+        )]))
     }
 
-    async fn handle_info(&self) -> Result<CallToolResult, rmcp::Error> {
+    async fn handle_info(&self) -> Result<CallToolResult, ErrorData> {
         let info = json!({
             "skill_id":   "sycophancy.correction",
             "version":    &self.config.skill.version,
@@ -373,12 +362,9 @@ impl SycophancyServer {
             ],
             "homepage":   "https://agentskills.io/skills/sycophancy-correction",
         });
-        Ok(CallToolResult {
-            content: vec![Content::text(
-                serde_json::to_string_pretty(&info).unwrap_or_default(),
-            )],
-            is_error: Some(false),
-        })
+        Ok(CallToolResult::success(vec![ContentBlock::text(
+            serde_json::to_string_pretty(&info).unwrap_or_default(),
+        )]))
     }
 }
 

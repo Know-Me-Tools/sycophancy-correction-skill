@@ -13,7 +13,7 @@ Canonical Agent Skills metadata lives in `SKILL.md`; a compatibility index for t
 
 ### Claude Code (Recommended)
 
-1. Install the binary (one-time):
+1. Install the binary with Rust 1.88 or later:
 
 ```bash
 cargo build --release
