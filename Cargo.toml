@@ -17,9 +17,9 @@ categories   = ["artificial-intelligence"]
 
 [workspace.dependencies]
 # Async runtime
-tokio          = { version = "1", features = ["full"] }
+tokio          = { version = "1.53.3", features = ["full"] }
 # MCP SDK  (modelcontextprotocol/rust-sdk)
-rmcp           = { version = "0.1", features = ["server", "transport-io"] }
+rmcp           = { version = "3.9.0", default-features = false, features = ["server", "transport-io"] }
 # HTTP client for the LLM provider (OpenAI-compatible /chat/completions)
 reqwest        = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 # Serialization
@@ -29,7 +29,7 @@ toml           = "0.8"
 # Async traits
 async-trait    = "0.1"
 # Error handling
-anyhow         = "1"
+anyhow         = "1.0.103"
 thiserror      = "2"
 # Logging / tracing
 tracing            = "0.1"
